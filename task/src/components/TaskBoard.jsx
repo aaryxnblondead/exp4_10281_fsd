@@ -21,6 +21,34 @@ const initialColumns = {
   }
 };
 
+const getStatusColor = (status) => {
+  switch (status) {
+    case 'To Do':
+      return '#B784F3' // Purple
+    case 'In Progress':
+      return '#FFD93D' // Yellow  
+    case 'Completed':
+      return '#4CAF50' // Green
+    default:
+      return '#ffffff' // White as fallback
+  }
+}
+
+const TaskCard = ({ task }) => {
+  return (
+    <div
+      style={{
+        backgroundColor: getStatusColor(task.status),
+        padding: '1rem',
+        borderRadius: '8px',
+        marginBottom: '0.5rem'
+      }}
+    >
+      {/* Your existing task card content */}
+    </div>
+  )
+}
+
 export default function TaskBoard() {
   const [columns, setColumns] = useState(initialColumns);
   const [tasks, setTasks] = useState({});

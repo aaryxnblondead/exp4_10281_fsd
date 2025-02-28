@@ -3,19 +3,24 @@ import { useState, useEffect } from 'react';
 export default function LiveClock() {
   const [time, setTime] = useState('');
   const [location, setLocation] = useState('');
+  const [timezone, setTimezone] = useState('');
 
   useEffect(() => {
+    // Detect user's timezone
+    const userTimeZone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+    setTimezone(userTimeZone);
+
     const fetchTimeAndLocation = async () => {
-      // First get timezone from IP
-      const ipResponse = await fetch('https://timeapi.io/api/Time/current/ip');
-      const ipData = await ipResponse.json();
+      const response = await fetch(`https://timeapi.io/api/Time/current/zone?timeZone=${userTimeZone}`);
+      const data = await response.json();
       
-      // Then get detailed time for that timezone
-      const timeResponse = await fetch(`https://timeapi.io/api/Time/current/zone?timeZone=${ipData.timeZone}`);
-      const timeData = await timeResponse.json();
+      // Format time with leading zeros
+      const hours = String(data.hour).padStart(2, '0');
+      const minutes = String(data.minute).padStart(2, '0');
+      const seconds = String(data.seconds).padStart(2, '0');
       
-      setLocation(ipData.timeZone);
-      setTime(`${timeData.hour}:${timeData.minute}:${timeData.seconds}`);
+      setTime(`${hours}:${minutes}:${seconds}`);
+      setLocation(data.timeZone);
     };
 
     fetchTimeAndLocation();
@@ -30,6 +35,7 @@ export default function LiveClock() {
     <div className="clock">
       <div className="time">{time}</div>
       <div className="location">{location}</div>
+      <div className="timezone">{timezone}</div>
     </div>
   );
 }

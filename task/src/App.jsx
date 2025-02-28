@@ -1,13 +1,13 @@
-import TaskBoard from './components/TaskBoard';
-import LiveClock from './components/LiveClock';
-import './styles/globals.css';
+import React from 'react'
+import TaskBoard from './components/TaskBoard'
 
-export default function App() {
+function App() {
   return (
     <div>
-      <LiveClock />
       <h1>Task Management Board</h1>
       <TaskBoard />
     </div>
-  );
+  )
 }
+
+export default App

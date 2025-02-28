@@ -1,5 +1,5 @@
 import { Draggable } from '@hello-pangea/dnd';
-
+import './task.css';
 const getCardColor = (columnName) => {
   switch (columnName) {
     default:
@@ -7,36 +7,25 @@ const getCardColor = (columnName) => {
   }
 };
 
-export default function Task({ task, index, onDelete, columnName }) {
-  const cardStyle = {
-    backgroundColor: getCardColor(columnName),
-    padding: '10px',
-    margin: '8px',
-    borderRadius: '4px',
-    boxShadow: '0 1px 3px rgba(0,0,0,0.12)',
-  };
-
+const Task = ({ task, index, columnName }) => {
   return (
     <Draggable draggableId={task.id} index={index}>
-      {(provided) => (
+      {(provided, snapshot) => (
         <div
-          className="task"
           ref={provided.innerRef}
           {...provided.draggableProps}
           {...provided.dragHandleProps}
-          style={{...cardStyle, ...provided.draggableProps.style}}
+          className={`task ${snapshot.isDragging ? 'dragging' : ''}`}
+          style={{
+            ...provided.draggableProps.style,
+            backgroundColor: getCardColor(columnName),
+          }}
         >
-          <div>{task.content}</div>
-          <div className="task-controls">
-            <button 
-              className="button button-delete"
-              onClick={() => onDelete(task.id)}
-            >
-              Delete
-            </button>
-          </div>
+          {task.content}
         </div>
       )}
     </Draggable>
   );
-}
+};
+
+export default Task;

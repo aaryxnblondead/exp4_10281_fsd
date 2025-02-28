@@ -1,177 +1,107 @@
-import { useState } from 'react';
-import { DragDropContext } from '@hello-pangea/dnd';
-import Column from './Column';
-import AddTaskModal from './AddTaskModal';
+import React, { useState } from 'react';
+import { DragDropContext, Droppable, Draggable } from 'react-beautiful-dnd';
+import '../styles/globals.css';
 
-const initialColumns = {
-  'todo': {
-    id: 'todo',
-    title: 'To Do',
-    taskIds: []
-  },
-  'inProgress': {
-    id: 'inProgress',
-    title: 'In Progress',
-    taskIds: []
-  },
-  'completed': {
-    id: 'completed',
-    title: 'Completed',
-    taskIds: []
-  }
+const initialTasks = {
+  todo: [
+    { id: '1', content: 'Task 1' },
+    { id: '2', content: 'Task 2' },
+  ],
+  inProgress: [
+    { id: '3', content: 'Task 3' },
+  ],
+  completed: [
+    { id: '4', content: 'Task 4' },
+  ],
 };
 
-const getStatusColor = (status) => {
-  switch (status) {
-    case 'To Do':
-      return '#B784F3' // Purple
-    case 'In Progress':
-      return '#FFD93D' // Yellow  
-    case 'Completed':
-      return '#4CAF50' // Green
-    default:
-      return '#ffffff' // White as fallback
-  }
-}
-
-const TaskCard = ({ task }) => {
-  return (
-    <div
-      style={{
-        backgroundColor: getStatusColor(task.status),
-        padding: '1rem',
-        borderRadius: '8px',
-        marginBottom: '0.5rem'
-      }}
-    >
-      {/* Your existing task card content */}
-    </div>
-  )
-}
+const Column = ({ title, tasks, id }) => (
+  <div className="column">
+    <h2 className="column-header">{title}</h2>
+    <Droppable droppableId={id}>
+      {(provided) => (
+        <div
+          {...provided.droppableProps}
+          ref={provided.innerRef}
+        >
+          {tasks.map((task, index) => (
+            <Draggable key={task.id} draggableId={task.id} index={index}>
+              {(provided, snapshot) => (
+                <div
+                  ref={provided.innerRef}
+                  {...provided.draggableProps}
+                  {...provided.dragHandleProps}
+                  className={`task ${snapshot.isDragging ? 'task-dragging' : ''}`}
+                >
+                  {task.content}
+                  <button 
+                    className="delete-task-button"
+                    onClick={() => handleDeleteTask(task.id)}
+                  >
+                    ×
+                  </button>
+                </div>
+              )}
+            </Draggable>
+          ))}
+          {provided.placeholder}
+        </div>
+      )}
+    </Droppable>
+  </div>
+);
 
 export default function TaskBoard() {
-  const [columns, setColumns] = useState(initialColumns);
-  const [tasks, setTasks] = useState({});
-  const [showModal, setShowModal] = useState(false);
+  const [tasks, setTasks] = useState(initialTasks);
 
   const handleDragEnd = (result) => {
-    const { destination, source, draggableId } = result;
+    if (!result.destination) return;
 
-    if (!destination) return;
-
-    if (
-      destination.droppableId === source.droppableId &&
-      destination.index === source.index
-    ) {
-      return;
-    }
-
-    const start = columns[source.droppableId];
-    const finish = columns[destination.droppableId];
-
-    if (start === finish) {
-      const newTaskIds = Array.from(start.taskIds);
-      newTaskIds.splice(source.index, 1);
-      newTaskIds.splice(destination.index, 0, draggableId);
-
-      const newColumn = {
-        ...start,
-        taskIds: newTaskIds
-      };
-
-      setColumns({
-        ...columns,
-        [newColumn.id]: newColumn
-      });
-      return;
-    }
-
-    const startTaskIds = Array.from(start.taskIds);
-    startTaskIds.splice(source.index, 1);
-    const newStart = {
-      ...start,
-      taskIds: startTaskIds
-    };
-
-    const finishTaskIds = Array.from(finish.taskIds);
-    finishTaskIds.splice(destination.index, 0, draggableId);
-    const newFinish = {
-      ...finish,
-      taskIds: finishTaskIds
-    };
-
-    setColumns({
-      ...columns,
-      [newStart.id]: newStart,
-      [newFinish.id]: newFinish
-    });
-  };
-
-  const addTask = (content) => {
-    const newTaskId = `task-${Date.now()}`;
-    const newTask = { id: newTaskId, content };
+    const { source, destination } = result;
+    const sourceList = [...tasks[source.droppableId]];
+    const destList = source.droppableId === destination.droppableId
+      ? sourceList
+      : [...tasks[destination.droppableId]];
     
+    const [removed] = sourceList.splice(source.index, 1);
+    destList.splice(destination.index, 0, removed);
+
     setTasks({
       ...tasks,
-      [newTaskId]: newTask
-    });
-
-    const newTaskIds = Array.from(columns.todo.taskIds);
-    newTaskIds.push(newTaskId);
-
-    setColumns({
-      ...columns,
-      todo: {
-        ...columns.todo,
-        taskIds: newTaskIds
-      }
+      [source.droppableId]: sourceList,
+      [destination.droppableId]: destList,
     });
   };
 
-  const deleteTask = (taskId) => {
-    const newTasks = { ...tasks };
-    delete newTasks[taskId];
-    setTasks(newTasks);
-
-    const newColumns = { ...columns };
-    Object.keys(newColumns).forEach(columnId => {
-      newColumns[columnId] = {
-        ...newColumns[columnId],
-        taskIds: newColumns[columnId].taskIds.filter(id => id !== taskId)
-      };
+  const handleDeleteTask = (taskId) => {
+    const newTasks = {};
+    Object.keys(tasks).forEach(columnId => {
+      newTasks[columnId] = tasks[columnId].filter(task => task.id !== taskId);
     });
-    setColumns(newColumns);
+    setTasks(newTasks);
+  };
+
+  const addNewTask = () => {
+    const newTask = {
+      id: String(Date.now()),
+      content: `New Task ${tasks.todo.length + 1}`,
+    };
+    setTasks({
+      ...tasks,
+      todo: [...tasks.todo, newTask],
+    });
   };
 
   return (
-    <>
-      <button 
-        className="button"
-        onClick={() => setShowModal(true)}
-        style={{ marginBottom: '20px' }}
-      >
+    <DragDropContext onDragEnd={handleDragEnd}>
+      <div className="task-board">
+        <Column title="To Do" tasks={tasks.todo} id="todo" />
+        <Column title="In Progress" tasks={tasks.inProgress} id="inProgress" />
+        <Column title="Completed" tasks={tasks.completed} id="completed" />
+      </div>
+      <button className="add-task-button" onClick={addNewTask}>
         Add New Task
       </button>
-
-      <DragDropContext onDragEnd={handleDragEnd}>
-        <div className="board">
-          {Object.values(columns).map(column => (
-            <Column
-              key={column.id}
-              column={column}
-              tasks={column.taskIds.map(taskId => tasks[taskId])}
-              onDelete={deleteTask}
-            />
-          ))}
-        </div>
-      </DragDropContext>
-
-      {showModal && (
-        <AddTaskModal
-          onClose={() => setShowModal(false)}
-          onAdd={addTask}
-        />
-      )}
-    </>
+    </DragDropContext>
   );
 }

@@ -66,23 +66,3 @@ button:focus-visible {
     background-color: #f9f9f9;
   }
 }
-
-.react-beautiful-dnd-drag-preview {
-  pointer-events: none;
-}
-
-.column-drop-preview {
-  border: 2px dashed rgba(0,0,0,0.1);
-  margin: 8px;
-  border-radius: 4px;
-  min-height: 80px;
-}
-
-@keyframes fadeIn {
-  from { opacity: 0; }
-  to { opacity: 1; }
-}
-
-.task-enter {
-  animation: fadeIn 0.2s ease;
-}

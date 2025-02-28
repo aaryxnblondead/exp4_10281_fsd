@@ -6,10 +6,16 @@ export default function LiveClock() {
 
   useEffect(() => {
     const fetchTimeAndLocation = async () => {
-      const response = await fetch('http://worldtimeapi.org/api/ip');
-      const data = await response.json();
-      setLocation(data.timezone);
-      setTime(new Date(data.datetime).toLocaleTimeString());
+      // First get timezone from IP
+      const ipResponse = await fetch('https://timeapi.io/api/Time/current/ip');
+      const ipData = await ipResponse.json();
+      
+      // Then get detailed time for that timezone
+      const timeResponse = await fetch(`https://timeapi.io/api/Time/current/zone?timeZone=${ipData.timeZone}`);
+      const timeData = await timeResponse.json();
+      
+      setLocation(ipData.timeZone);
+      setTime(`${timeData.hour}:${timeData.minute}:${timeData.seconds}`);
     };
 
     fetchTimeAndLocation();
